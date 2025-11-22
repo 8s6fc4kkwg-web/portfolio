@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href=".././logo.png">
+    <title> Analyse de Données, Reporting et Datavisualisation - Théo PETIT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow-x: hidden;
+            background: #F9FAFB;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Navbar simplifiée */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 3rem;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Logo */
+        .logo {
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .logo:hover {
+            opacity: 0.7;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        /* Navigation centrale */
+        .nav-center {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            position: relative;
+            text-decoration: none;
+            color: #111;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            color: #5A8FBD;
+        }
+
+        /* Menu déroulant Projets */
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding-top: 1.5rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .dropdown-content > div {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            padding: 2rem;
+            min-width: 280px;
+        }
+
+        .nav-dropdown:hover .dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .dropdown-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #111;
+            padding-bottom: 0.5rem;
+        }
+
+        .dropdown-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .dropdown-link {
+            text-decoration: none;
+            color: #4B5563;
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 0.6rem 0.8rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .dropdown-link:hover {
+            background: #F3F4F6;
+            color: #111;
+            padding-left: 1.2rem;
+        }
+
+        /* Barre de recherche */
+        .search-container {
+            position: relative;
+            max-width: 180px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border: none;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            background: #F5F5F5;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .search-box:hover, .search-box:focus {
+            background: #E5E5E5;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: #111;
+            pointer-events: none;
+        }
+
+        /* Hero du projet */
+        .project-hero {
+            margin-top: 60px;
+            padding: 4rem 3rem;
+            background: linear-gradient(135deg, #2C3E50 0%, #5A8FBD 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .project-hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .project-hero .project-subtitle {
+            font-size: 1.3rem;
+            font-weight: 300;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+        }
+
+        /* Technologies badges */
+        .project-technologies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .tech-badge {
+            padding: 0.8rem 1.8rem;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .tech-badge:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+        }
+
+        /* Contenu principal */
+        .project-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 3rem;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .content-section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #5A8FBD;
+            padding-left: 1.5rem;
+        }
+
+        .content-section h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2C3E50;
+            margin: 2rem 0 1rem;
+        }
+
+        .content-section p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #4B5563;
+            margin-bottom: 1.5rem;
+        }
+
+        .content-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .content-section ul li {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #4B5563;
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        .content-section ul li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #5A8FBD;
+            font-weight: 700;
+        }
+
+        /* Images du projet */
+        .project-image {
+            width: 100%;
+            max-width: 800px;
+            margin: 2rem auto;
+            display: block;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Difficulté */
+        .difficulty-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #E8F2F9 0%, #D6E7F5 100%);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .difficulty-section h3 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: #2C3E50;
+        }
+
+        .stars {
+            color: #5A8FBD;
+            font-size: 1.5rem;
+        }
+
+        /* Temps estimé */
+        .time-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: #F3F4F6;
+            border-radius: 12px;
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 2rem;
+        }
+
+        /* Boutons d'action */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #5A8FBD;
+            border: 2px solid #5A8FBD;
+        }
+
+        .btn-secondary:hover {
+            background: #5A8FBD;
+            color: white;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 4rem 3rem 2rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-brand {
+            max-width: 300px;
+        }
+
+        .footer-logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-logo-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .footer-address {
+            color: #b0b0b0;
+            line-height: 1.8;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-contact-item {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-contact-label {
+            color: #888;
+            min-width: 80px;
+        }
+
+        .footer-contact a {
+            color: #5A8FBD;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-contact a:hover {
+            color: #B8D4EC;
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .footer-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .footer-link {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: #5A8FBD;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .footer-copyright {
+            color: #888;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 1.5rem;
+            }
+
+            .nav-center {
+                display: none;
+            }
+
+            .project-hero {
+                padding: 3rem 1.5rem;
+            }
+
+            .project-content {
+                padding: 2rem 1.5rem;
+            }
+
+            .content-section {
+                padding: 2rem 1.5rem;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <!-- Logo -->
+        <div class="logo" onclick="window.location.href='../index2.html'">
+            <img src="../logo.png" alt="Logo" onerror="this.style.background='linear-gradient(135deg, #B8B8B8, #8A8A8A)'; this.alt='TP';">
+        </div>
+
+        <!-- Navigation centrale -->
+        <div class="nav-center">
+            <a href=".././index2.html" class="nav-link">Accueil</a>
+
+            <!-- Dropdown Projets -->
+            <div class="nav-dropdown">
+                <span class="nav-link">Projets 1ère année</span>
+                <div class="dropdown-content">
+                    <div>
+                        <h3 class="dropdown-title">Mes Projets</h3>
+                        <div class="dropdown-links">
+                            <a href="ADRD.html" class="dropdown-link">Projet A.D.R.D</a>
+                            <a href="vba.html" class="dropdown-link">Application Excel/VBA</a>
+                            <a href="enquete.html" class="dropdown-link"> Enquête sur les étudiants</a>
+                            <a href="bdr.html" class="dropdown-link">Conception d'une BDR</a>
+                            <a href="regression.html" class="dropdown-link"> Régréssion linéaire</a>
+                            <a href="dataviz.html" class="dropdown-link"> Concours DataViz</a>
+                            <a href="bdr.html" class="dropdown-link">Conception d'une BDR</a>
+                            <a href="indicateurs.html" class="dropdown-link"> Indicateurs de performances</a>
+                            <a href="estimation.html" class="dropdown-link"> Estimation par échantillonage</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barre de recherche -->
+        <div class="search-container">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input type="text" class="search-box" placeholder="Rechercher">
+        </div>
+    </nav>
+
+    <!-- Hero du projet -->
+    <section class="project-hero">
+        <h1>Analyse de Données, Reporting et Datavisualisation (ADRD)</h1>
+        <p class="project-subtitle">Analyse statistique de données météorologiques avec Python et visualisation interactive</p>
+
+        <!-- Technologies utilisées -->
+        <div class="project-technologies">
+            <span class="tech-badge">Python</span>
+            <span class="tech-badge">Pandas</span>
+            <span class="tech-badge">Matplotlib</span>
+            <span class="tech-badge">Statistiques</span>
+        </div>
+    </section>
+
+    <!-- Contenu principal -->
+    <div class="project-content">
+        <!-- Difficulté et temps -->
+        <div class="difficulty-section">
+            <h3>DIFFICULTÉ :</h3>
+            <div class="stars">★★★★☆</div>
+        </div>
+        <div class="time-info">
+            ⏱️ Temps estimé : 50h
+        </div>
+
+        <!-- Description du projet -->
+        <div class="content-section">
+            <h2>Description du Projet</h2>
+            <p>
+                Ce projet s'est déroulé sur une semaine entière en équipe, durant laquelle nous avons collaboré au mieux afin de
+                fournir le livrable à <strong>Calixys</strong>. Dans le cadre du projet réalisé en partenariat avec le <strong>laboratoire MAVIE</strong>, nous avons
+                répondu à une demande de l'entreprise Calixys visant à développer un livrable complet : "Une datavisualisation sur les
+                risques du quotidien" via un fichier Excel regroupant <strong>619 répondants</strong> à un questionnaire préalablement établi et mené
+                par l'entreprise.
+            </p>
+            <p>
+                Nous avons utilisé la méthode <strong>SCRUM</strong> pour mener à bien ce projet dans les délais impartis et garantir une
+                organisation continue. Comme expliqué dans <a href="#" style="color: #5A8FBD; text-decoration: none;">mon rapport individuel</a>, cette méthode nous a permis d'avancer
+                efficacement tout en assurant la cohérence globale du projet.
+            </p>
+            <p>
+                De mon côté, je me suis principalement concentré sur la <strong>réalisation des visuels et graphiques</strong>, ainsi que sur la
+                <strong>valorisation des données</strong> dans Excel, tout en contribuant activement à la rédaction du diagnostic final. Un de mes
+                collaborateurs a assuré le suivi du projet et la validation des résultats pour garantir la qualité du rendu final. Grâce à
+                cette collaboration et à une répartition naturelle des tâches, nous avons pu conjuguer nos efforts pour aboutir à un
+                livrable structuré et professionnel.
+            </p>
+            <p>
+                Ce projet m'a permis d'affiner mes compétences en datavisualisation, en organisation d'équipe et en restitution
+                synthétique des données. Je suis fier d'avoir participé à cette expérience collective enrichissante et d'avoir pu mettre
+                mes compétences au service d'un projet concret et utile.
+            </p>
+
+            <!-- Image exemple -->
+            <img src="projets/1ere/projet1.jpg" alt="Aperçu du projet" class="project-image" onerror="this.src='https://via.placeholder.com/800x500/5A8FBD/FFFFFF?text=Analyse+de+Données'">
+        </div>
+
+        <!-- Compétences développées -->
+        <div class="content-section">
+            <h2>Compétences Développées</h2>
+            <ul>
+                <li>Analyse statistique de données complexes</li>
+                <li>Création de visualisations claires et impactantes</li>
+                <li>Travail en équipe avec méthodologie SCRUM</li>
+                <li>Valorisation et nettoyage de données Excel</li>
+                <li>Rédaction de rapports professionnels</li>
+                <li>Communication des résultats aux parties prenantes</li>
+            </ul>
+        </div>
+
+        <!-- Résultats et apprentissages -->
+        <div class="content-section">
+            <h2>Résultats et Apprentissages</h2>
+            <h3>Résultats obtenus</h3>
+            <p>
+                Livrable complet comprenant des visualisations interactives, un diagnostic approfondi des risques du quotidien
+                basé sur l'analyse de 619 réponses, et des recommandations stratégiques pour l'entreprise Calixys.
+            </p>
+
+            <h3>Ce que j'ai appris</h3>
+            <p>
+                L'importance de la communication en équipe, la maîtrise des outils de datavisualisation Python,
+                et comment transformer des données brutes en insights actionnables pour une entreprise.
+            </p>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="action-buttons">
+            <a href="#" class="btn btn-primary">Voir Mon Rapport Individuel</a>
+            <a href="#" class="btn btn-primary">Voir Le Rapport Collectif</a>
+            <a href="#" class="btn btn-primary">Voir Le Tableau De Bord</a>
+            <a href="../index2.html#projets" class="btn btn-secondary">← Retour aux projets</a>
+        </div>
+
+        <!-- Note de confidentialité -->
+        <div style="margin-top: 3rem; padding: 1.5rem; background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 8px;">
+            <p style="color: #92400E; margin: 0;">
+                🔒 L'ensemble de ce projet n'est pas open-source. Pour y accéder, n'hésitez pas à <a href="mailto:pro.theopetit@gmail.com" style="color: #1E3A8A; font-weight: 600;">me contacter</a>.
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <!-- Brand Section -->
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    <img src="logo.png" alt="Logo" class="footer-logo-img" onerror="this.style.display='none';">
+                    Théo PETIT
+                </div>
+                <p class="footer-address">
+                    IUT de Niort<br>
+                    Département BUT Science des Données<br>
+                    79000 Niort, France
+                </p>
+                <div class="footer-contact">
+                    <div class="footer-contact-item">
+                        <span class="footer-contact-label">Téléphone:</span>
+                        <a href="tel:+33781088125">+33 7 81 08 81 25</a>
+                    </div>
+                    <div class="footer-contact-item">
+                        <span class="footer-contact-label">Email:</span>
+                        <a href="mailto:pro.theopetit@gmail.com">pro.theopetit@gmail.com</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="footer-section">
+                <h4 class="footer-title">Navigation</h4>
+                <div class="footer-links">
+                    <a href="../index2.html#top" class="footer-link">Accueil</a>
+                    <a href="index2.html#projets" class="footer-link">Projets</a>
+                    >
+                </div>
+            </div>
+
+            <!-- Social Links -->
+            <div class="footer-section">
+                <h4 class="footer-title">Réseaux</h4>
+                <div class="footer-links">
+                    <a href="https://www.linkedin.com/in/théo-petit1" target="_blank" class="footer-link">LinkedIn</a>
+                    <a href="https://x.com/but_sd_niort" target="_blank" class="footer-link">X</a>
+                    <a href="https://www.instagram.com/but_sd_niort/" target="_blank" class="footer-link">Instagram</a>
+                </div>
+            </div>
+
+            <!-- Partenaires -->
+            <div class="footer-section">
+                <h4 class="footer-title">Formation</h4>
+                <div class="footer-logos">
+                    <img src="../but.png" alt="BUT Logo" style="height: 60px; width: auto; object-fit: contain; opacity: 0.7; filter: brightness(0) invert(1);" onerror="this.style.display='none';">
+                    <img src="../univ.png" alt="Université Logo" style="height: 60px; width: auto; object-fit: contain; opacity: 0.7; filter: brightness(0) invert(1); margin-top: 1.5rem;" onerror="this.style.display='none';">
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="footer-bottom">
+            <p class="footer-copyright">© 2025 Théo PETIT - Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>
