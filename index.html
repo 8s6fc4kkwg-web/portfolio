@@ -4839,7 +4839,7 @@
         }
 
         // Charger le compteur de visiteurs
-        fetch('compteur.php')
+        fetch('/api/visitor-count')
             .then(response => response.text())
             .then(count => {
                 const visitorCountElement = document.getElementById('visitorCount');

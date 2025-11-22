@@ -166,6 +166,29 @@ async function sendDailyEmail() {
     });
 }
 
+// --- Visitor Counter Logic ---
+const fs = require('fs');
+const counterFile = path.join(__dirname, '../compteur.txt');
+
+app.get('/api/visitor-count', (req, res) => {
+    fs.readFile(counterFile, 'utf8', (err, data) => {
+        let count = 0;
+        if (!err && data) {
+            count = parseInt(data, 10) || 0;
+        }
+
+        count++;
+
+        fs.writeFile(counterFile, count.toString(), (err) => {
+            if (err) {
+                console.error('Error writing to counter file:', err);
+                // Still return the count even if save fails, or handle error
+            }
+            res.send(count.toString());
+        });
+    });
+});
+
 // Schedule: Run every day at 8:00 AM (Paris Time)
 cron.schedule('0 8 * * *', () => {
     console.log('Running daily task...');
