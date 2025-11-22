@@ -1,5 +1,5 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const cron = require('node-cron');
@@ -9,14 +9,13 @@ const Parser = require('rss-parser'); // RSS Parser
 const parser = new Parser();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
 // Serve Static Files (Frontend)
-// Serve files from the parent directory (where index.html is located)
 app.use(express.static(path.join(__dirname, '../')));
 
 // Route for root to serve index.html explicitly
@@ -24,68 +23,94 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../index.html'));
 });
 
-// Database Setup
-const dbPath = path.resolve(__dirname, 'newsletter.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Error opening database', err.message);
-    } else {
-        console.log('Connected to the SQLite database.');
-        db.run(`CREATE TABLE IF NOT EXISTS subscribers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT UNIQUE,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`);
-    }
+// --- MongoDB Connection ---
+// IMPORTANT: Set MONGODB_URI in your environment variables (e.g., Render Dashboard)
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://protheopetit_db_user:DuisWbGdxa8oPDD2@cluster0.7bmogti.mongodb.net/portfolio?appName=Cluster0';
+
+mongoose.connect(MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('Could not connect to MongoDB:', err));
+
+// --- Mongoose Schemas ---
+
+// Subscriber Schema
+const subscriberSchema = new mongoose.Schema({
+    email: { type: String, required: true, unique: true },
+    subscribedAt: { type: Date, default: Date.now }
 });
+const Subscriber = mongoose.model('Subscriber', subscriberSchema);
+
+// Visitor Counter Schema
+const visitorSchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true }, // e.g., 'main_counter'
+    count: { type: Number, default: 0 }
+});
+const Visitor = mongoose.model('Visitor', visitorSchema);
+
+// --- API Endpoints ---
 
 // Subscribe Endpoint
-app.post('/subscribe', (req, res) => {
+app.post('/subscribe', async (req, res) => {
     const { email } = req.body;
     if (!email) {
         return res.status(400).json({ error: 'Email required' });
     }
 
-    const sql = `INSERT INTO subscribers (email) VALUES (?)`;
-    console.log(`Attempting to subscribe: ${email}`); // Log to terminal
-    db.run(sql, [email], function (err) {
-        if (err) {
-            if (err.message.includes('UNIQUE constraint failed')) {
-                return res.status(400).json({ error: 'Email already subscribed' });
-            }
-            return res.status(500).json({ error: err.message });
+    try {
+        const newSubscriber = new Subscriber({ email });
+        await newSubscriber.save();
+        console.log(`Successfully subscribed: ${email}`);
+        res.json({ message: 'Successfully subscribed' });
+    } catch (err) {
+        if (err.code === 11000) { // Duplicate key error
+            return res.status(400).json({ error: 'Email already subscribed' });
         }
-        res.json({ message: 'Successfully subscribed', id: this.lastID });
-    });
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // View Subscribers Endpoint (For Admin/Testing)
-app.get('/subscribers', (req, res) => {
-    db.all(`SELECT * FROM subscribers`, [], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.json(rows);
-    });
+app.get('/subscribers', async (req, res) => {
+    try {
+        const subscribers = await Subscriber.find().sort({ subscribedAt: -1 });
+        res.json(subscribers);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// Email Configuration (Mock/Placeholder)
-// IMPORTANT: Replace with real SMTP credentials
+// Visitor Counter Endpoint
+app.get('/api/visitor-count', async (req, res) => {
+    try {
+        // Find the counter and increment it atomically
+        // upsert: true creates it if it doesn't exist
+        const updatedVisitor = await Visitor.findOneAndUpdate(
+            { name: 'main_counter' },
+            { $inc: { count: 1 } },
+            { new: true, upsert: true }
+        );
+        res.send(updatedVisitor.count.toString());
+    } catch (err) {
+        console.error('Error updating visitor count:', err);
+        res.status(500).send('Error');
+    }
+});
+
+// --- Email Logic ---
+
+// Email Configuration
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // or your SMTP provider
+    service: 'gmail',
     auth: {
         user: 'newsletter.ia.innovation@gmail.com',
         pass: 'wbgb qxht lmsm jlxg'
     }
 });
 
-// --- RSS News Fetcher ---
+// RSS News Fetcher
 async function fetchAINews() {
     try {
-        // Using Wired AI Feed (or TechCrunch, etc.)
         const feed = await parser.parseURL('https://www.wired.com/feed/tag/ai/latest/rss');
-
-        // Get top 3 items
         const topNews = feed.items.slice(0, 3).map(item => {
             return `
             <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
@@ -95,11 +120,9 @@ async function fetchAINews() {
                 <p style="margin: 0; color: #666; font-size: 14px;">${item.contentSnippet ? item.contentSnippet.substring(0, 100) + '...' : ''}</p>
             </div>`;
         }).join('');
-
         return topNews;
     } catch (error) {
         console.error("Error fetching RSS:", error);
-        // Fallback if RSS fails
         return `
             <div style="margin-bottom: 15px;">
                 <h3 style="margin: 0;">Actualités IA indisponibles pour le moment.</h3>
@@ -107,17 +130,15 @@ async function fetchAINews() {
     }
 }
 
-// --- Email Sending Logic ---
+// Send Daily Email
 async function sendDailyEmail() {
     console.log('Preparing daily email...');
-
-    const newsHtml = await fetchAINews(); // Fetch real news
-
+    const newsHtml = await fetchAINews();
     const date = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
     const mailOptions = {
-        from: '"IA Daily" <newsletter.ia.innovation@gmail.com>', // Sender address
-        subject: `Veille IA du ${date}`, // Subject line
+        from: '"IA Daily" <newsletter.ia.innovation@gmail.com>',
+        subject: `Veille IA du ${date}`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
                 <div style="background: #5A8FBD; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -141,53 +162,28 @@ async function sendDailyEmail() {
         `
     };
 
-    // Get all subscribers
-    db.all("SELECT email FROM subscribers", [], (err, rows) => {
-        if (err) {
-            console.error("Error fetching subscribers:", err);
+    try {
+        const subscribers = await Subscriber.find();
+        if (subscribers.length === 0) {
+            console.log("No subscribers found.");
             return;
         }
 
-        rows.forEach(row => {
-            mailOptions.to = row.email;
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    return console.log(`Error sending to ${row.email}:`, error);
-                }
-                console.log(`Email sent to ${row.email}: ${info.response}`);
-            });
-        });
+        console.log(`Found ${subscribers.length} subscribers. Sending emails...`);
 
-        if (rows.length === 0) {
-            console.log("No subscribers found in database.");
-        } else {
-            console.log(`Found ${rows.length} subscribers. Sending emails...`);
-        }
-    });
-}
-
-// --- Visitor Counter Logic ---
-const fs = require('fs');
-const counterFile = path.join(__dirname, '../compteur.txt');
-
-app.get('/api/visitor-count', (req, res) => {
-    fs.readFile(counterFile, 'utf8', (err, data) => {
-        let count = 0;
-        if (!err && data) {
-            count = parseInt(data, 10) || 0;
-        }
-
-        count++;
-
-        fs.writeFile(counterFile, count.toString(), (err) => {
-            if (err) {
-                console.error('Error writing to counter file:', err);
-                // Still return the count even if save fails, or handle error
+        for (const sub of subscribers) {
+            mailOptions.to = sub.email;
+            try {
+                const info = await transporter.sendMail(mailOptions);
+                console.log(`Email sent to ${sub.email}: ${info.response}`);
+            } catch (error) {
+                console.error(`Error sending to ${sub.email}:`, error);
             }
-            res.send(count.toString());
-        });
-    });
-});
+        }
+    } catch (err) {
+        console.error("Error fetching subscribers for email:", err);
+    }
+}
 
 // Schedule: Run every day at 8:00 AM (Paris Time)
 cron.schedule('0 8 * * *', () => {
