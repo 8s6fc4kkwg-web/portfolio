@@ -30,7 +30,8 @@
 
     .logo {
         font-size: 1.2rem;
-        flex-shrink: 0;
+        flex-shrink: 0 !important;
+        /* Prevent shrinking */
         transition: transform 0.2s ease;
     }
 
@@ -42,20 +43,32 @@
         display: none;
         position: fixed;
         top: 50px;
-        left: 0;
+        left: -60px !important;
+        /* Force left alignment */
+        margin: 0 !important;
+        /* Remove any margin */
         right: auto;
-        width: 75%;
-        max-width: 300px;
-        height: calc(100vh - 50px);
+        width: 70%;
+        /* More discreet */
+        max-width: 280px;
+        /* Max width constraint */
+        height: auto;
+        /* Auto height to fit content */
+        max-height: 80vh;
+        /* Safety limit */
         background: rgba(255, 255, 255, 0.98);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         flex-direction: column;
-        padding: 1.5rem 1rem;
-        gap: 0.5rem;
+        padding: 1.5rem 1rem 1.5rem 0;
+        /* 0 padding left */
         z-index: 999;
-        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+        box-shadow: 5px 0 20px rgba(0, 0, 0, 0.05);
+        /* Softer shadow */
         border-right: 1px solid rgba(0, 0, 0, 0.05);
+        border-bottom-right-radius: 16px;
+        /* Rounded bottom corner */
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         overflow-y: auto;
         animation: slideInLeft 0.3s ease-out;
     }
@@ -78,7 +91,8 @@
 
     .nav-link {
         width: 100%;
-        padding: 1rem;
+        padding: 1rem 1rem 1rem 1.5rem;
+        /* Add left padding to link since container has 0 */
         text-align: left;
         font-size: 1rem;
         color: #111;
@@ -187,11 +201,21 @@
         cursor: pointer;
         transition: transform 0.3s ease;
         z-index: 2;
+        display: flex;
+        /* Ensure icon is a flex container */
+        align-items: center;
+        /* Center SVG inside */
+        height: 100%;
+        /* Match container height */
     }
 
     .search-box {
         position: absolute;
         right: 0;
+        top: 50%;
+        /* Center vertically */
+        transform: translateY(-50%);
+        /* Center vertically */
         width: 0;
         opacity: 0;
         padding: 0.5rem 0;
@@ -632,8 +656,10 @@
 
     .carousel-title {
         font-size: 1.75rem !important;
-        margin-bottom: 1.5rem !important;
-        color: white !important;
+        margin-top: 1rem !important;
+        margin-bottom: 2rem !important;
+        color: #2C3E50 !important;
+        /* Dark color for visibility */
     }
 
     .carousel-description {
@@ -677,6 +703,10 @@
         position: relative;
         z-index: 1;
         background: transparent;
+        opacity: 1 !important;
+        /* Force visibility */
+        transform: none !important;
+        /* Remove animation */
     }
 
     .projects-header {
@@ -780,6 +810,31 @@
         min-height: 60vh !important;
         position: relative;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        background: #F9FAFB !important;
+        /* Light background to match Engagements */
+    }
+
+    /* Add Title for Mobile - Styled like Engagements */
+    .experience-section::before {
+        content: "MES EXPÉRIENCES";
+        display: block;
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 3rem);
+        /* Match section-title size */
+        font-weight: 800;
+        /* Match section-title weight */
+        color: #2C3E50;
+        margin-bottom: 3rem;
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+        border-bottom: 4px solid #5A8FBD;
+        /* Blue underline */
+        padding-bottom: 5px;
+        letter-spacing: -0.02em;
+        text-transform: uppercase;
     }
 
     /* Hide all slider UI elements */
@@ -789,14 +844,65 @@
         display: none !important;
     }
 
-    /* Carousel container */
+    /* Carousel container - Allow vertical stacking */
     .experience-carousel-container {
         margin-top: 0;
         position: relative !important;
-        height: 50vh !important;
-        min-height: 400px;
-        overflow: hidden !important;
+        height: auto !important;
+        /* Auto height for stack */
+        min-height: auto !important;
+        overflow: visible !important;
+        /* Allow scrolling */
         border-radius: 16px;
+    }
+
+    /* Slides wrapper - Vertical Flex */
+    .experience-slides {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2rem !important;
+        transform: none !important;
+        /* Disable JS translation */
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Individual Slide - Card style */
+    .experience-slide {
+        position: relative !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        opacity: 1 !important;
+        /* Force visibility */
+        margin-bottom: 1rem;
+    }
+
+    /* Ensure content wrapper is visible and styled correctly */
+    .experience-content-wrapper {
+        position: relative !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 2rem 1.5rem !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
+    /* Adjust background images for cards */
+    .experience-background {
+        border-radius: 16px;
+    }
+
+    .experience-overlay {
+        border-radius: 16px;
+        background: linear-gradient(to bottom,
+                rgba(0, 0, 0, 0.2),
+                /* Lighter top */
+                rgba(0, 0, 0, 0.6)
+                /* Lighter bottom */
+            ) !important;
     }
 
     /* Slides as background images */
